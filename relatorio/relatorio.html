@@ -1,0 +1,481 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Do artigo ao banco de dados: estruturas do PDB citadas na literatura recente</title>
+  <style>
+    :root {
+      --primary: #1e3a8a;
+      --primary-light: #2563eb;
+      --text: #1f2937;
+      --text-muted: #4b5563;
+      --bg: #ffffff;
+      --bg-alt: #f8fafc;
+      --border: #e2e8f0;
+      --code-bg: #f1f5f9;
+      --card-shadow: 0 4px 6px -1px rgba(0,0,0,0.06);
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+      line-height: 1.65;
+      color: var(--text);
+      background-color: var(--bg-alt);
+      padding: 2.5rem 1rem;
+    }
+    .container {
+      max-width: 960px;
+      margin: 0 auto;
+      background: var(--bg);
+      padding: 3.5rem 4rem;
+      border-radius: 12px;
+      box-shadow: var(--card-shadow);
+      border: 1px solid var(--border);
+    }
+    header {
+      border-bottom: 2px solid var(--primary);
+      padding-bottom: 1.8rem;
+      margin-bottom: 2.2rem;
+    }
+    .badge-course {
+      display: inline-block;
+      background: #e0e7ff;
+      color: var(--primary);
+      font-size: 0.85rem;
+      font-weight: 700;
+      padding: 0.35rem 0.8rem;
+      border-radius: 9999px;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      margin-bottom: 0.8rem;
+    }
+    h1 {
+      font-size: 2.1rem;
+      color: #0f172a;
+      line-height: 1.25;
+      margin-bottom: 0.8rem;
+      font-weight: 800;
+    }
+    .meta-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 1rem;
+      margin-top: 1.2rem;
+      font-size: 0.95rem;
+      color: var(--text-muted);
+    }
+    .meta-item strong { color: var(--text); }
+    h2 {
+      font-size: 1.45rem;
+      color: var(--primary);
+      margin-top: 2.5rem;
+      margin-bottom: 0.9rem;
+      padding-bottom: 0.35rem;
+      border-bottom: 1px solid var(--border);
+      font-weight: 700;
+    }
+    h3 {
+      font-size: 1.15rem;
+      color: #1e293b;
+      margin-top: 1.6rem;
+      margin-bottom: 0.6rem;
+      font-weight: 600;
+    }
+    p { margin-bottom: 1.15rem; text-align: justify; }
+    ul, ol { margin-left: 1.8rem; margin-bottom: 1.2rem; }
+    li { margin-bottom: 0.4rem; }
+    .executive-summary {
+      background: #eff6ff;
+      border-left: 4px solid var(--primary-light);
+      padding: 1.3rem 1.6rem;
+      border-radius: 0 8px 8px 0;
+      margin: 1.8rem 0;
+    }
+    .executive-summary h3 {
+      margin-top: 0;
+      color: var(--primary);
+    }
+    .figure-card {
+      margin: 2rem 0;
+      background: #ffffff;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      overflow: hidden;
+      box-shadow: var(--card-shadow);
+      text-align: center;
+    }
+    .figure-card img {
+      max-width: 100%;
+      height: auto;
+      display: block;
+      margin: 0 auto;
+    }
+    .figure-caption {
+      padding: 0.85rem 1.2rem;
+      font-size: 0.9rem;
+      color: var(--text-muted);
+      background: #f8fafc;
+      border-top: 1px solid var(--border);
+      text-align: left;
+    }
+    .figure-caption strong { color: var(--text); }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 1.6rem 0;
+      font-size: 0.92rem;
+    }
+    th, td {
+      padding: 0.7rem 0.9rem;
+      border: 1px solid var(--border);
+      text-align: left;
+    }
+    th {
+      background-color: #f1f5f9;
+      font-weight: 700;
+      color: #0f172a;
+    }
+    tr:nth-child(even) td { background-color: #f8fafc; }
+    .text-center { text-align: center; }
+    .kpi-row {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 1rem;
+      margin: 1.8rem 0;
+    }
+    .kpi-card {
+      background: #ffffff;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 1.2rem;
+      text-align: center;
+      box-shadow: var(--card-shadow);
+    }
+    .kpi-value {
+      font-size: 1.85rem;
+      font-weight: 800;
+      color: var(--primary);
+      margin-bottom: 0.3rem;
+    }
+    .kpi-label {
+      font-size: 0.85rem;
+      color: var(--text-muted);
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+    }
+    pre {
+      background: var(--code-bg);
+      padding: 1.1rem;
+      border-radius: 8px;
+      overflow-x: auto;
+      font-size: 0.86rem;
+      margin-bottom: 1.3rem;
+      border: 1px solid var(--border);
+      line-height: 1.45;
+    }
+    code {
+      font-family: Consolas, Monaco, "Courier New", monospace;
+      color: #0f172a;
+    }
+    .ref-list {
+      margin-top: 1.5rem;
+      font-size: 0.9rem;
+      line-height: 1.6;
+    }
+    .ref-item {
+      margin-bottom: 1rem;
+      text-align: justify;
+      padding-left: 1.5rem;
+      text-indent: -1.5rem;
+    }
+    footer {
+      margin-top: 3.5rem;
+      padding-top: 1.5rem;
+      border-top: 1px solid var(--border);
+      text-align: center;
+      font-size: 0.85rem;
+      color: var(--text-muted);
+    }
+    @media print {
+      body { background: #fff; padding: 0; }
+      .container { box-shadow: none; border: none; padding: 0; max-width: 100%; }
+      .figure-card { page-break-inside: avoid; box-shadow: none; }
+      table { page-break-inside: avoid; }
+    }
+  </style>
+</head>
+<body>
+<div class="container">
+
+  <header>
+    <div class="badge-course">FCM 2026: Disciplina de Bancos de Dados (Prof. Vilches)</div>
+    <h1>Do artigo ao banco de dados: estruturas do PDB citadas na literatura recente</h1>
+    <p style="font-size: 1.05rem; color: var(--text-muted); margin-bottom: 1rem;">
+      Análise comparativa quantitativa entre periódicos experimentais (IUCrJ) e computacionais (PLoS Computational Biology) em 2026
+    </p>
+    <div class="meta-grid">
+      <div class="meta-item">
+        <strong>Docente:</strong> Prof. Dr. Thomas Nogueira Vilches<br>
+        <strong>Instituição:</strong> Faculdade de Ciências Médicas (FCM / UNICAMP)
+      </div>
+      <div class="meta-item">
+        <strong>Discentes:</strong><br>
+        José Victor Orlandi (gráficos, análise, relatório, apresentação)<br>
+        Ricardo de Paiva Caetano (seleção de artigos, PDFs, regex, scraping)<br>
+        Pedro Yuji Yashima (modelagem relacional SQL, banco PostgreSQL)
+      </div>
+    </div>
+  </header>
+
+  <div class="executive-summary">
+    <h3>Resumo</h3>
+    <p>
+      O Protein Data Bank (PDB) armazena mais de 220 mil registros de estruturas biológicas (BURLEY et al., 2023, 2025), mas a consulta à base isolada reflete apenas o histórico de depósitos, sem indicar o uso real dessas coordenadas pela comunidade científica. Para mapear como a pesquisa utiliza essas estruturas, implementamos um pipeline em R que extraiu citações aos códigos PDB nos 20 artigos de acesso aberto mais recentes publicados em 2026 nos periódicos <strong>IUCrJ</strong> (cristalografia experimental) e <strong>PLoS Computational Biology</strong> (modelagem computacional) por meio da API da Europe PMC (FERGUSON et al., 2021; ROSONOVSKI et al., 2024).
+    </p>
+    <p>
+      Foram capturadas 126 menções a 122 estruturas PDB únicas válidas, enriquecidas por meio de raspagem web no RCSB PDB e organizadas em banco relacional PostgreSQL em Terceira Forma Normal (SILBERSCHATZ; KORTH; SUDARSHAN, 2020; VILCHES, 2026). Os resultados indicam especialização funcional entre as revistas: enquanto a IUCrJ concentra novos depósitos (34,1% de dados inéditos, resolução de raios X mediana de 1,70 Å e idade mediana de 4,4 anos), a PLoS Computational Biology reutiliza exclusivamente dados prévios da literatura (0% de novos depósitos, 100% de reuso e idade mediana de 12,6 anos, com depósitos datados de 1986).
+    </p>
+  </div>
+
+  <div class="kpi-row">
+    <div class="kpi-card">
+      <div class="kpi-value">20</div>
+      <div class="kpi-label">Artigos Recentes (2026)</div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-value">126</div>
+      <div class="kpi-label">Menções a Códigos PDB</div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-value">122</div>
+      <div class="kpi-label">Estruturas Únicas Válidas</div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-value">34,1% vs 0%</div>
+      <div class="kpi-label">Taxa Depósito (IUCrJ vs PLoS)</div>
+    </div>
+  </div>
+
+  <h2>1. Introdução</h2>
+  <p>
+    O Protein Data Bank (PDB) reúne coordenadas tridimensionais de macromoléculas biológicas determinadas experimentalmente desde 1971 (BERMAN et al., 2000). O acervo central administrado pelo consórcio mundial ultrapassou recentemente 220 mil entradas experimentais consolidadas e integradas a predições de inteligência artificial (BURLEY et al., 2023, 2025). No entanto, a base de dados isolada registra apenas o histórico cumulativo de depósitos, sem indicar o uso efetivo ou a frequência com que essas estruturas são mobilizadas pela comunidade científica contemporânea. Enquanto certas coordenadas permanecem sem novas citações após o depósito original, estruturas canônicas continuam servindo de base contínua para simulações de dinâmica molecular, ensaios de atracamento ligante-receptor (*docking*) e calibração de modelos biofísicos.
+  </p>
+  <p>
+    A literatura primária fornece o registro mais fidedigno desse consumo. Quando autores citam um código PDB no corpo de um artigo, estabelecem uma relação direta e funcional entre aquela estrutura e uma investigação biológica em curso (FERGUSON et al., 2021; ROSONOVSKI et al., 2024).
+  </p>
+  <p>
+    Periódicos científicos respondem a culturas metodológicas distintas:
+  </p>
+  <ul>
+    <li><strong>Periódicos experimentais (ex.: IUCrJ):</strong> concentram trabalhos dedicados à determinação de novas estruturas atômicas por difração de raios X e criomicroscopia eletrônica (Crio-ME) (DE LA CRUZ; ENG, 2023). Seus artigos operam predominantemente como geradores primários de coordenadas inéditas.</li>
+    <li><strong>Periódicos computacionais (ex.: PLoS Computational Biology):</strong> dedicam-se a modelos teóricos, simulações biofísicas, biologia de sistemas e predições computacionais (ABRAMSON et al., 2024; VARADI et al., 2024). Seus artigos atuam majoritariamente como usuários secundários de coordenadas pré-existentes.</li>
+  </ul>
+  <p>
+    O objetivo deste trabalho foi implementar um pipeline automatizado em linguagem R para extrair códigos PDB citados em artigos de acesso aberto publicados em 2026 em ambos os periódicos. O sistema recupera metadados do RCSB PDB por raspagem web, persiste as informações em um banco relacional PostgreSQL normalizado em Terceira Forma Normal (3FN) e compara quantitativamente as taxas de depósito, a idade dos dados, os métodos biofísicos e as proteínas mais exploradas pela comunidade.
+  </p>
+
+  <h2>2. Metodologia e engenharia de dados</h2>
+  <p>
+    O pipeline foi estruturado em módulos independentes em linguagem R (WICKHAM et al., 2019):
+  </p>
+  <pre><code>[Europe PMC API] -> [AWS S3 Bucket (PMC-OA)] -> [Mineração Regex nos PDFs]
+                                                        │
+                                                        ▼
+[Banco PostgreSQL (Schema pdb)] <- [Tidyverse / DBI] <- [Scraping RCSB PDB]</code></pre>
+
+  <h3>2.1. Seleção dos artigos</h3>
+  <p>
+    O script consulta a API REST da Europe PMC (ROSONOVSKI et al., 2024), aplicando filtros de acesso aberto (`OPEN_ACCESS: y`) e referências estruturais (`ACCESSION_TYPE: pdb`). Para cada registro, o script consulta o endpoint de anotações automatizadas (`/annotations`) da Europe PMC (FERGUSON et al., 2021). A amostragem fixou os 10 primeiros artigos de cada periódico que continham pelo menos 3 códigos PDB citados no texto, totalizando 20 manuscritos analisados.
+  </p>
+
+  <h3>2.2. Obtenção dos textos completos</h3>
+  <p>
+    Como o portal web do PubMed Central limita requisições automatizadas diretas, os textos completos foram obtidos do repositório público em nuvem do PMC Open Access na AWS S3 (`pmc-oa-opendata.s3.amazonaws.com`). O script identifica o arquivo PDF principal de cada artigo, ignorando materiais suplementares, e faz o download com taxa controlada de 2 segundos entre requisições.
+  </p>
+
+  <h3>2.3. Mineração de texto e extração de códigos PDB</h3>
+  <p>
+    O padrão alfanumérico clássico de um código PDB é formado por 4 caracteres: um dígito inicial entre 1 e 9 seguido por 3 letras ou algarismos (BERMAN et al., 2000). A aplicação direta de expressões regulares puras acarreta falsos positivos com anos, equipamentos laboratoriais e unidades de medida. Para mitigar o ruído, adotaram-se filtros de contexto: exigência de ao menos um caractere alfabético nas 3 últimas posições e presença de palavras-chave estruturais (*PDB, accession, entry, coordinates*) na mesma linha ou até 6 linhas acima no PDF.
+  </p>
+
+  <h3>2.4. Enriquecimento de metadados no RCSB PDB</h3>
+  <p>
+    Cada código catalogado foi consultado no portal do RCSB PDB com a biblioteca `rvest` (BURLEY et al., 2023, 2025). Foram extraídas informações da estrutura (método, resolução, data de depósito, peso molecular, cadeias únicas e DOI do artigo de depósito) e de cada entidade proteica (nome da molécula, organismo, código UniProt e classificação enzimática EC). A coleta manteve pausas de 2 segundos entre páginas e registrou entradas não liberadas ou com erro 404 em arquivo de auditoria.
+  </p>
+
+  <h3>2.5. Modelagem relacional e carga SQL</h3>
+  <p>
+    O schema `pdb` foi normalizado em Terceira Forma Normal (3FN), adotando as convenções da disciplina com prefixos `ref_` para tabelas de domínio e `tab_` para tabelas de dados (SILBERSCHATZ; KORTH; SUDARSHAN, 2020; VILCHES, 2026). Relações N:M entre entidades macromoleculares e identificadores UniProt foram implementadas por meio da tabela associativa `tab_entidade_uniprot`.
+  </p>
+
+  <h2>3. Resultados e discussão</h2>
+
+  <h3>3.1. Taxa de depósito inédito versus reaproveitamento</h3>
+  <p>
+    Para determinar se uma estrutura mencionada foi solucionada pelos autores do próprio artigo, comparamos o DOI do manuscrito ao DOI registrado na entrada do PDB (`LOWER(doi_artigo) == LOWER(doi_estrutura)`).
+  </p>
+
+  <table>
+    <thead>
+      <tr>
+        <th>Periódico</th>
+        <th class="text-center">Artigos</th>
+        <th class="text-center">Menções</th>
+        <th class="text-center">Estruturas Únicas</th>
+        <th class="text-center">Depositadas pelo Artigo</th>
+        <th class="text-center">Reaproveitadas</th>
+        <th class="text-center">Taxa de Depósito</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><strong>IUCrJ</strong></td>
+        <td class="text-center">10</td>
+        <td class="text-center">92</td>
+        <td class="text-center">89</td>
+        <td class="text-center">30</td>
+        <td class="text-center">58</td>
+        <td class="text-center"><strong>34,1%</strong></td>
+      </tr>
+      <tr>
+        <td><strong>PLoS Comput Biol</strong></td>
+        <td class="text-center">10</td>
+        <td class="text-center">34</td>
+        <td class="text-center">33</td>
+        <td class="text-center">0</td>
+        <td class="text-center">33</td>
+        <td class="text-center"><strong>0,0%</strong></td>
+      </tr>
+    </tbody>
+  </table>
+
+  <div class="figure-card">
+    <img src="../figuras/fig1_origem_estruturas.png" alt="Figura 1: Origem das estruturas por revista">
+    <div class="figure-caption">
+      <strong>Figura 1: Origem das estruturas PDB citadas por revista.</strong> Na IUCrJ, 34,1% das estruturas correspondem a novos depósitos descritos no próprio manuscrito. Na PLoS Computational Biology, todas as 33 estruturas identificadas foram reutilizadas da literatura. Teste exato de Fisher: <em>p</em> = 2,43 × 10⁻⁵ (FISHER, 1922; AGRESTI, 2018).
+    </div>
+  </div>
+
+  <h3>3.2. Idade das estruturas citadas e inércia computacional</h3>
+  <p>
+    A diferença temporal entre a data de publicação do artigo em 2026 e a data de depósito da estrutura no PDB indica o horizonte temporal de cada periódico:
+  </p>
+
+  <table>
+    <thead>
+      <tr>
+        <th>Periódico</th>
+        <th class="text-center">Média</th>
+        <th class="text-center">Mediana</th>
+        <th class="text-center">Mínimo</th>
+        <th class="text-center">Máximo</th>
+        <th class="text-center">Depósito Mais Antigo</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><strong>IUCrJ</strong></td>
+        <td class="text-center">5,66 anos</td>
+        <td class="text-center"><strong>4,40 anos</strong></td>
+        <td class="text-center">0,19 anos</td>
+        <td class="text-center">32,7 anos</td>
+        <td class="text-center">02/07/1993</td>
+      </tr>
+      <tr>
+        <td><strong>PLoS Comput Biol</strong></td>
+        <td class="text-center">15,33 anos</td>
+        <td class="text-center"><strong>12,63 anos</strong></td>
+        <td class="text-center">1,49 anos</td>
+        <td class="text-center">40,3 anos</td>
+        <td class="text-center">31/03/1986</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <div class="figure-card">
+    <img src="../figuras/fig2_distribuicao_idade.png" alt="Figura 2: Distribuição de idade das estruturas citadas">
+    <div class="figure-caption">
+      <strong>Figura 2: Distribuição de idade das estruturas citadas (em anos).</strong> O teste de Wilcoxon-Mann-Whitney (<em>W</em> = 503, <em>p</em> = 2,61 × 10⁻⁸; MANN; WHITNEY, 1947) confirma a segregação temporal: a PLoS Computational Biology cita estruturas com mediana de 12,6 anos (com casos de até 40 anos), enquanto a IUCrJ cita estruturas com mediana de 4,4 anos.
+    </div>
+  </div>
+
+  <div class="figure-card">
+    <img src="../figuras/fig6_linha_tempo_deposito.png" alt="Figura 3: Linha do tempo dos depósitos">
+    <div class="figure-caption">
+      <strong>Figura 3: Histórico dos anos de depósito das estruturas mencionadas em 2026.</strong> A IUCrJ concentra citações no intervalo de 2020 a 2026, enquanto a PLoS Computational Biology apresenta distribuição ampla cobrindo as décadas de 1990 e 2000.
+    </div>
+  </div>
+
+  <h3>3.3. Métodos biofísicos e resolução atômica</h3>
+  <div class="figure-card">
+    <img src="../figuras/fig3_resolucao_metodos.png" alt="Figura 4: Resolução estrutural por método e revista">
+    <div class="figure-caption">
+      <strong>Figura 4: Resolução estrutural em difração de raios X e criomicroscopia eletrônica.</strong> Estruturas de raios X na IUCrJ apresentam resolução mediana superior (1,70 Å contra 2,21 Å na PLoS Computational Biology; teste de Wilcoxon <em>p</em> = 0,00248). A Crio-ME representa 34,9% das estruturas na IUCrJ, com resolução mediana de 2,89 Å (DE LA CRUZ; ENG, 2023).
+    </div>
+  </div>
+
+  <h3>3.4. Proteínas e alvos moleculares frequentes (UniProt)</h3>
+  <div class="figure-card">
+    <img src="../figuras/fig4_top_uniprot_proteinas.png" alt="Figura 5: Proteínas mais citadas">
+    <div class="figure-caption">
+      <strong>Figura 5: Alvos moleculares mais frequentes na amostra.</strong> A beta-lactamase CTX-M-15 (<code>G3G192</code>) lidera com 11 estruturas citadas em 2 artigos, refletindo a pesquisa em resistência bacteriana a antimicrobianos (HUSNA et al., 2023). Outros alvos incluem a integrina alfa-M (<code>P11215</code>), L-asparaginase 2 (<code>P00805</code>) e a glicoproteína Spike do SARS-CoV-2 (<code>P0DTC2</code>).
+    </div>
+  </div>
+
+  <h3>3.5. Dispersão de menções por artigo</h3>
+  <div class="figure-card">
+    <img src="../figuras/fig5_mencoes_por_artigo.png" alt="Figura 6: Volume de menções por artigo">
+    <div class="figure-caption">
+      <strong>Figura 6: Contagem de menções e códigos únicos por publicação.</strong> As barras representam menções totais no texto; os pontos demarcam o número de estruturas PDB distintas em cada PMCID.
+    </div>
+  </div>
+
+  <h2>4. Conclusões</h2>
+  <p>
+    O trabalho implementou o pipeline proposto para a disciplina FCM 2026, cobrindo:
+  </p>
+  <ul>
+    <li>Coleta automatizada de publicações via API REST e repositório AWS S3 (FERGUSON et al., 2021; ROSONOVSKI et al., 2024);</li>
+    <li>Extração de termos com heurísticas de contexto para mitigação de falsos positivos;</li>
+    <li>Raspagem incremental com taxa controlada no RCSB PDB (BURLEY et al., 2023, 2025);</li>
+    <li>Persistência relacional em PostgreSQL normalizada em Terceira Forma Normal (SILBERSCHATZ; KORTH; SUDARSHAN, 2020; VILCHES, 2026);</li>
+    <li>Geração de figuras em alta resolução e testes inferenciais de hipótese (AGRESTI, 2018).</li>
+  </ul>
+  <p>
+    Os dados comprovam a divisão funcional: periódicos experimentais (IUCrJ) expandem o acervo primário do PDB com novas estruturas de alta resolução recente, enquanto periódicos computacionais (PLoS Computational Biology) atuam na reutilização de dados consolidados como referência para calibração de modelos biofísicos.
+  </p>
+  <p>
+    O repositório completo com scripts e dados está disponível em:  
+    <a href="https://github.com/paivacaetano126/TrabalhoPDB" target="_blank">https://github.com/paivacaetano126/TrabalhoPDB</a>.
+  </p>
+
+  <h2>5. Referências</h2>
+  <div class="ref-list">
+    <div class="ref-item">ABRAMSON, J. et al. Accurate structure prediction of biomolecular interactions with AlphaFold 3. <strong>Nature</strong>, London, v. 630, n. 8016, p. 493-500, 2024. DOI: <a href="https://doi.org/10.1038/s41586-024-07487-w" target="_blank">10.1038/s41586-024-07487-w</a>.</div>
+    <div class="ref-item">AGRESTI, A. <strong>An Introduction to Categorical Data Analysis</strong>. 3. ed. Hoboken: John Wiley & Sons, 2018.</div>
+    <div class="ref-item">BERMAN, H. M. et al. The Protein Data Bank. <strong>Nucleic Acids Research</strong>, Oxford, v. 28, n. 1, p. 235-242, 2000. DOI: <a href="https://doi.org/10.1093/nar/28.1.235" target="_blank">10.1093/nar/28.1.235</a>.</div>
+    <div class="ref-item">BURLEY, S. K. et al. RCSB Protein Data Bank (RCSB.org): delivery of experimentally-determined PDB structures alongside one million computed structure models of proteins from artificial intelligence/machine learning. <strong>Nucleic Acids Research</strong>, Oxford, v. 51, n. D1, p. D488-D508, 2023. DOI: <a href="https://doi.org/10.1093/nar/gkac1077" target="_blank">10.1093/nar/gkac1077</a>.</div>
+    <div class="ref-item">BURLEY, S. K. et al. Updated resources for exploring experimentally-determined PDB structures and Computed Structure Models at the RCSB Protein Data Bank. <strong>Nucleic Acids Research</strong>, Oxford, v. 53, n. D1, p. D564-D574, 2025. DOI: <a href="https://doi.org/10.1093/nar/gkae1091" target="_blank">10.1093/nar/gkae1091</a>.</div>
+    <div class="ref-item">DE LA CRUZ, M. J.; ENG, E. T. Scaling up cryo-EM for biology and chemistry: The journey from niche technology to mainstream method. <strong>Structure</strong>, Cambridge, v. 31, n. 12, p. 1475-1488, 2023. DOI: <a href="https://doi.org/10.1016/j.str.2023.09.009" target="_blank">10.1016/j.str.2023.09.009</a>.</div>
+    <div class="ref-item">FERGUSON, C. et al. Europe PMC in 2020. <strong>Nucleic Acids Research</strong>, Oxford, v. 49, n. D1, p. D1507-D1517, 2021. DOI: <a href="https://doi.org/10.1093/nar/gkaa994" target="_blank">10.1093/nar/gkaa994</a>.</div>
+    <div class="ref-item">FISHER, R. A. On the interpretation of &chi;<sup>2</sup> from contingency tables, and the calculation of P. <strong>Journal of the Royal Statistical Society</strong>, London, v. 85, n. 1, p. 87-94, 1922. DOI: <a href="https://doi.org/10.2307/2340521" target="_blank">10.2307/2340521</a>.</div>
+    <div class="ref-item">HARRISON, X. A. et al. A brief introduction to mixed effects modelling and multi-model inference in ecology. <strong>PeerJ</strong>, v. 6, p. e4794, 2018. DOI: <a href="https://doi.org/10.7717/peerj.4794" target="_blank">10.7717/peerj.4794</a>.</div>
+    <div class="ref-item">HUSNA, A. et al. Extended-Spectrum &beta;-Lactamases (ESBL): Challenges and Opportunities. <strong>Biomedicines</strong>, Basel, v. 11, n. 11, p. 2937, 2023. DOI: <a href="https://doi.org/10.3390/biomedicines11112937" target="_blank">10.3390/biomedicines11112937</a>.</div>
+    <div class="ref-item">MANN, H. B.; WHITNEY, D. R. On a test of whether one of two random variables is stochastically larger than the other. <strong>The Annals of Mathematical Statistics</strong>, Baltimore, v. 18, n. 1, p. 50-60, 1947. DOI: <a href="https://doi.org/10.1214/aoms/1177730491" target="_blank">10.1214/aoms/1177730491</a>.</div>
+    <div class="ref-item">ROSONOVSKI, S. et al. Europe PMC in 2023. <strong>Nucleic Acids Research</strong>, Oxford, v. 52, n. D1, p. D1668-D1676, 2024. DOI: <a href="https://doi.org/10.1093/nar/gkad1085" target="_blank">10.1093/nar/gkad1085</a>.</div>
+    <div class="ref-item">SILBERSCHATZ, A.; KORTH, H. F.; SUDARSHAN, S. <strong>Database System Concepts</strong>. 7. ed. New York: McGraw-Hill, 2020.</div>
+    <div class="ref-item">VARADI, M. et al. AlphaFold Protein Structure Database in 2024: providing structure coverage for over 214 million protein sequences. <strong>Nucleic Acids Research</strong>, Oxford, v. 52, n. D1, p. D376-D385, 2024. DOI: <a href="https://doi.org/10.1093/nar/gkad1011" target="_blank">10.1093/nar/gkad1011</a>.</div>
+    <div class="ref-item">VILCHES, T. N. <strong>Notas de aula e diretrizes da disciplina de bancos de dados</strong>. Campinas: Faculdade de Ciências Médicas, Universidade Estadual de Campinas, 2026.</div>
+    <div class="ref-item">WICKHAM, H. et al. Welcome to the Tidyverse. <strong>Journal of Open Source Software</strong>, v. 4, n. 43, p. 1686, 2019. DOI: <a href="https://doi.org/10.21105/joss.01686" target="_blank">10.21105/joss.01686</a>.</div>
+  </div>
+
+  <footer>
+    <p>Trabalho acadêmico desenvolvido para a disciplina FCM 2026 (Prof. Dr. Thomas Nogueira Vilches)</p>
+    <p>Discentes: José Victor Orlandi • Ricardo de Paiva Caetano • Pedro Yuji Yashima</p>
+  </footer>
+
+</div>
+</body>
+</html>

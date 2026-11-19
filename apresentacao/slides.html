@@ -1,0 +1,707 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Apresentação: Do artigo ao banco de dados (PDB)</title>
+  <style>
+    :root {
+      --primary: #1e3a8a;
+      --primary-light: #2563eb;
+      --secondary: #d97706;
+      --accent: #10b981;
+      --dark: #0f172a;
+      --light: #f8fafc;
+      --card-bg: #ffffff;
+      --text: #1e293b;
+      --text-muted: #64748b;
+      --border: #e2e8f0;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+      background-color: #0b1120;
+      color: var(--light);
+      display: flex;
+      flex-direction: column;
+      height: 100vh;
+      overflow: hidden;
+      user-select: none;
+    }
+    .deck-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 0.6rem 1.5rem;
+      background: #0f172a;
+      border-bottom: 1px solid #1e293b;
+      font-size: 0.85rem;
+      color: var(--text-muted);
+      z-index: 10;
+    }
+    .deck-title {
+      font-weight: 700;
+      color: #93c5fd;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+    .deck-controls {
+      display: flex;
+      align-items: center;
+      gap: 0.8rem;
+    }
+    .btn {
+      background: #1e293b;
+      color: #e2e8f0;
+      border: 1px solid #334155;
+      padding: 0.35rem 0.75rem;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 0.8rem;
+      font-weight: 600;
+      transition: all 0.2s;
+    }
+    .btn:hover {
+      background: #334155;
+      color: #ffffff;
+      border-color: #475569;
+    }
+    .btn-primary {
+      background: var(--primary);
+      border-color: var(--primary-light);
+      color: white;
+    }
+    .btn-primary:hover {
+      background: var(--primary-light);
+    }
+    .slide-viewport {
+      flex: 1;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      padding: 1.5rem;
+      position: relative;
+      overflow: hidden;
+    }
+    .slide {
+      display: none;
+      width: 100%;
+      max-width: 1200px;
+      height: 100%;
+      max-height: 720px;
+      background: var(--card-bg);
+      color: var(--text);
+      border-radius: 14px;
+      box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.45);
+      padding: 2.5rem 3rem;
+      overflow-y: auto;
+      flex-direction: column;
+      position: relative;
+      animation: fadeIn 0.25s ease-out;
+    }
+    .slide.active {
+      display: flex;
+    }
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(6px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    .slide-badge {
+      display: inline-block;
+      background: #e0e7ff;
+      color: var(--primary);
+      font-size: 0.75rem;
+      font-weight: 700;
+      padding: 0.25rem 0.65rem;
+      border-radius: 9999px;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      margin-bottom: 0.5rem;
+      align-self: flex-start;
+    }
+    .slide-title {
+      font-size: 1.85rem;
+      color: #0f172a;
+      font-weight: 800;
+      line-height: 1.25;
+      margin-bottom: 0.4rem;
+    }
+    .slide-subtitle {
+      font-size: 1.05rem;
+      color: var(--text-muted);
+      margin-bottom: 1.5rem;
+    }
+    .slide-body {
+      flex: 1;
+      display: flex;
+      gap: 2rem;
+      align-items: center;
+    }
+    .col-left {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+    }
+    .col-right {
+      flex: 1.1;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      background: #f8fafc;
+      border-radius: 10px;
+      border: 1px solid var(--border);
+      padding: 0.75rem;
+      max-height: 480px;
+      overflow: hidden;
+    }
+    .col-right img {
+      max-width: 100%;
+      max-height: 450px;
+      object-fit: contain;
+      border-radius: 6px;
+    }
+    .slide-list {
+      list-style: none;
+      display: flex;
+      flex-direction: column;
+      gap: 0.75rem;
+    }
+    .slide-list li {
+      position: relative;
+      padding-left: 1.5rem;
+      font-size: 1.02rem;
+      line-height: 1.5;
+      color: #334155;
+    }
+    .slide-list li::before {
+      content: "•";
+      position: absolute;
+      left: 0;
+      top: -0.1rem;
+      font-size: 1.4rem;
+      color: var(--primary);
+    }
+    .slide-list li strong {
+      color: #0f172a;
+    }
+    .slide-cover {
+      justify-content: center;
+      align-items: center;
+      text-align: center;
+      background: linear-gradient(145deg, #ffffff 0%, #f1f5f9 100%);
+    }
+    .cover-title {
+      font-size: 2.3rem;
+      color: var(--primary);
+      font-weight: 800;
+      max-width: 900px;
+      margin-bottom: 1rem;
+      line-height: 1.2;
+    }
+    .cover-subtitle {
+      font-size: 1.2rem;
+      color: var(--text-muted);
+      max-width: 750px;
+      margin-bottom: 2rem;
+    }
+    .authors-box {
+      background: #ffffff;
+      border: 1px solid var(--border);
+      padding: 1.2rem 2rem;
+      border-radius: 10px;
+      display: flex;
+      gap: 2rem;
+      font-size: 0.95rem;
+      box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05);
+    }
+    .author-item strong { display: block; color: var(--primary); }
+    .stat-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      background: #eff6ff;
+      border: 1px solid #bfdbfe;
+      color: #1e40af;
+      padding: 0.5rem 0.9rem;
+      border-radius: 8px;
+      font-weight: 700;
+      font-size: 0.95rem;
+    }
+    .alert-box {
+      background: #fef3c7;
+      border-left: 4px solid var(--secondary);
+      padding: 0.75rem 1rem;
+      border-radius: 0 6px 6px 0;
+      font-size: 0.95rem;
+      color: #78350f;
+    }
+    .notes-panel {
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      background: rgba(15, 23, 42, 0.96);
+      color: #f1f5f9;
+      padding: 1.2rem 2rem;
+      border-top: 2px solid var(--primary-light);
+      font-size: 0.95rem;
+      line-height: 1.6;
+      max-height: 220px;
+      overflow-y: auto;
+      transform: translateY(100%);
+      transition: transform 0.25s ease-in-out;
+      z-index: 20;
+      backdrop-filter: blur(8px);
+    }
+    .notes-panel.visible {
+      transform: translateY(0);
+    }
+    .notes-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 0.5rem;
+      font-weight: 700;
+      color: #93c5fd;
+      font-size: 0.85rem;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+    .notes-content {
+      color: #cbd5e1;
+    }
+    .deck-footer {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 0.6rem 1.5rem;
+      background: #0f172a;
+      border-top: 1px solid #1e293b;
+      font-size: 0.85rem;
+    }
+    .progress-bar-container {
+      flex: 1;
+      max-width: 400px;
+      height: 6px;
+      background: #1e293b;
+      border-radius: 3px;
+      margin: 0 1.5rem;
+      overflow: hidden;
+    }
+    .progress-bar {
+      height: 100%;
+      background: var(--primary-light);
+      width: 8.33%;
+      transition: width 0.25s ease;
+    }
+    .slide-counter {
+      color: #94a3b8;
+      font-weight: 600;
+    }
+  </style>
+</head>
+<body>
+
+  <header class="deck-header">
+    <div class="deck-title">
+      <span>FCM 2026: Do artigo ao banco de dados (PDB)</span>
+    </div>
+    <div class="deck-controls">
+      <button class="btn" id="btn-notes" title="Atalho: Tecla N">Roteiro do apresentador (N)</button>
+      <button class="btn" id="btn-fullscreen" title="Atalho: Tecla F">Tela cheia (F)</button>
+    </div>
+  </header>
+
+  <main class="slide-viewport">
+
+    <!-- Slide 1 -->
+    <section class="slide slide-cover active" data-slide="1">
+      <div class="slide-badge">Seminário Final: FCM 2026</div>
+      <h1 class="cover-title">Do artigo ao banco de dados: estruturas do PDB citadas na literatura</h1>
+      <p class="cover-subtitle">Análise comparativa quantitativa entre periódicos experimentais (IUCrJ) e computacionais (PLoS Computational Biology) em 2026</p>
+      <div class="authors-box">
+        <div class="author-item">
+          <strong>José Victor Orlandi</strong>
+          <span>Gráficos, relatório e apresentação</span>
+        </div>
+        <div class="author-item">
+          <strong>Ricardo de Paiva Caetano</strong>
+          <span>Seleção, PDFs, regex e scraping</span>
+        </div>
+        <div class="author-item">
+          <strong>Pedro Yuji Yashima</strong>
+          <span>Modelagem relacional SQL</span>
+        </div>
+      </div>
+      <div style="margin-top: 1.5rem; font-size: 0.85rem; color: #64748b;">
+        Docente: <strong>Prof. Dr. Thomas Nogueira Vilches</strong>
+      </div>
+    </section>
+
+    <!-- Slide 2 -->
+    <section class="slide" data-slide="2">
+      <div class="slide-badge">Contexto e motivação</div>
+      <h2 class="slide-title">Uso das estruturas do Protein Data Bank</h2>
+      <p class="slide-subtitle">O catálogo do PDB registra o histórico de depósitos, não o consumo atual da comunidade</p>
+      <div class="slide-body">
+        <div class="col-left">
+          <ul class="slide-list">
+            <li><strong>Mais de 220.000 estruturas depositadas:</strong> acervo cumulativo gerado desde 1971.</li>
+            <li><strong>Diferença de frequência de citação:</strong> muitas coordenadas permanecem sem novas citações após o depósito original; outras tornam-se referências contínuas.</li>
+            <li><strong>A citação na literatura:</strong> a menção explícita no texto do artigo indica quais estruturas participam ativamente da pesquisa recente.</li>
+            <li><strong>Objetivo:</strong> comparar como revistas experimentais e computacionais utilizam e produzem esses dados.</li>
+          </ul>
+        </div>
+        <div class="col-right" style="flex-direction: column; text-align: center; gap: 1rem;">
+          <div style="font-size: 1.1rem; font-weight: bold; color: var(--primary);">Artigo Científico ➔ Extração PDB ➔ Banco Relacional</div>
+          <p style="font-size: 0.95rem; color: #475569; max-width: 320px;">
+            A mineração direta de textos completos permite quantificar os métodos, alvos e o reuso de estruturas no campo.
+          </p>
+        </div>
+      </div>
+    </section>
+
+    <!-- Slide 3 -->
+    <section class="slide" data-slide="3">
+      <div class="slide-badge">Desenho amostral</div>
+      <h2 class="slide-title">Dois perfis metodológicos na literatura</h2>
+      <p class="slide-subtitle">Comparativo entre produção experimental e modelagem computacional em 2026</p>
+      <div class="slide-body">
+        <div class="col-left">
+          <div style="background: #eff6ff; border-left: 4px solid #2b5c8f; padding: 1rem; border-radius: 0 8px 8px 0; margin-bottom: 0.8rem;">
+            <strong style="color: #1e3a8a; font-size: 1.05rem;">IUCrJ (União Internacional de Cristalografia)</strong>
+            <p style="font-size: 0.95rem; color: #334155; margin-top: 0.3rem;">
+              Periódico de elucidação experimental de estruturas (raios X, Crio-ME). Hipótese: periódico produtor de novos depósitos.
+            </p>
+          </div>
+          <div style="background: #fff7ed; border-left: 4px solid #d95f02; padding: 1rem; border-radius: 0 8px 8px 0;">
+            <strong style="color: #9a3412; font-size: 1.05rem;">PLoS Computational Biology</strong>
+            <p style="font-size: 0.95rem; color: #334155; margin-top: 0.3rem;">
+              Periódico de bioinformática, simulações moleculares e biologia teórica. Hipótese: periódico consumidor de estruturas preexistentes.
+            </p>
+          </div>
+          <p style="font-size: 0.9rem; color: #64748b; margin-top: 0.5rem;">
+            Critério: Os 10 artigos mais novos de 2026 de cada periódico com ao menos 3 códigos PDB citados (20 artigos no total).
+          </p>
+        </div>
+        <div class="col-right" style="flex-direction: column; gap: 0.8rem;">
+          <div style="background: white; border: 1px solid #cbd5e1; padding: 1rem; border-radius: 8px; width: 100%; text-align: center;">
+            <div style="font-size: 1.8rem; font-weight: 800; color: #2b5c8f;">10 Artigos IUCrJ</div>
+            <div style="font-size: 0.85rem; color: #64748b;">92 menções | 89 estruturas únicas</div>
+          </div>
+          <div style="background: white; border: 1px solid #cbd5e1; padding: 1rem; border-radius: 8px; width: 100%; text-align: center;">
+            <div style="font-size: 1.8rem; font-weight: 800; color: #d95f02;">10 Artigos PLoS CB</div>
+            <div style="font-size: 0.85rem; color: #64748b;">34 menções | 33 estruturas únicas</div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Slide 4 -->
+    <section class="slide" data-slide="4">
+      <div class="slide-badge">Engenharia de dados</div>
+      <h2 class="slide-title">Arquitetura do pipeline</h2>
+      <p class="slide-subtitle">Processo em linguagem R dividido em etapas modulares e independentes</p>
+      <div class="slide-body">
+        <div class="col-left">
+          <ul class="slide-list">
+            <li><strong>00_selecionar_artigos.R:</strong> consulta à API da Europe PMC (acesso aberto e anotações PDB).</li>
+            <li><strong>01_baixar_pdfs.R:</strong> download automatizado dos PDFs pelo bucket aberto da AWS S3 do PMC.</li>
+            <li><strong>02_extrair_pdb.R:</strong> mineração de texto nos PDFs via <code>pdftools</code> com regex e filtros de contexto.</li>
+            <li><strong>03_scraping_pdb.R:</strong> coleta de metadados no RCSB PDB via <code>rvest</code> com controle de taxa.</li>
+            <li><strong>04_banco_sql.R:</strong> modelagem relacional e carga no PostgreSQL (schema <code>pdb</code>, 3FN).</li>
+            <li><strong>05_graficos.R:</strong> análises estatísticas e gráficos com <code>ggplot2</code>.</li>
+          </ul>
+        </div>
+        <div class="col-right" style="background: #0f172a; color: #94a3b8; font-family: monospace; font-size: 0.85rem; padding: 1.2rem; align-items: flex-start; justify-content: flex-start;">
+          <div style="color: #38bdf8; font-weight: bold; margin-bottom: 0.5rem;">Fluxo de dados</div>
+          <div>Europe PMC API (JSON)</div>
+          <div style="color: #64748b;">  ↓ metadados bibliográficos</div>
+          <div>AWS S3 pmc-oa-opendata</div>
+          <div style="color: #64748b;">  ↓ PDFs completos</div>
+          <div>pdftools + regex contextual</div>
+          <div style="color: #64748b;">  ↓ lista de códigos PDB</div>
+          <div>rvest (RCSB PDB scraping)</div>
+          <div style="color: #64748b;">  ↓ metadados e entidades UniProt</div>
+          <div style="color: #4ade80; font-weight: bold;">PostgreSQL (schema pdb, 3FN)</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Slide 5 -->
+    <section class="slide" data-slide="5">
+      <div class="slide-badge">Desafios técnicos</div>
+      <h2 class="slide-title">Mineração textual e raspagem no RCSB</h2>
+      <p class="slide-subtitle">Soluções para os ruídos comuns de processamento em documentos científicos</p>
+      <div class="slide-body">
+        <div class="col-left">
+          <ul class="slide-list">
+            <li><strong>Acesso aos arquivos:</strong> o portal web do PMC limita requisições; contornamos utilizando o repositório aberto na nuvem AWS.</li>
+            <li><strong>Expressão regular para 4 caracteres:</strong> a busca direta por <code>[1-9][A-Za-z0-9]{3}</code> captura anos (2026), aparelhos (<code>LC-20AD</code>) e unidades (<code>100ms</code>).</li>
+            <li><strong>Filtro contextual:</strong> exigência de ao menos 1 letra nas 3 últimas posições e termos contextuais (*PDB, accession, entry*) até 6 linhas acima.</li>
+            <li><strong>Coleta responsável:</strong> atraso de 2s entre páginas, consulta incremental e fila para registros com erro 404 ou não liberados (<code>5WH0</code>).</li>
+          </ul>
+        </div>
+        <div class="col-right" style="flex-direction: column; gap: 0.8rem;">
+          <div class="alert-box" style="width: 100%;">
+            <strong>Exemplo de ruído filtrado:</strong><br>
+            O termo <code>20AD</code> indicava uma bomba cromatográfica Shimadzu citada no texto, removida pelo critério de validação.
+          </div>
+          <div style="background: #f1f5f9; padding: 0.8rem; border-radius: 6px; font-size: 0.85rem; width: 100%;">
+            <strong>Erros de digitação nos artigos:</strong><br>
+            O código <code>9YRD</code> (RNA) foi citado em artigo de beta-lactamase no lugar de <code>9RYD</code>; o pipeline preservou o registro documental original.
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Slide 6 -->
+    <section class="slide" data-slide="6">
+      <div class="slide-badge">Banco de dados</div>
+      <h2 class="slide-title">Modelagem relacional em PostgreSQL</h2>
+      <p class="slide-subtitle">Schema pdb estruturado em Terceira Forma Normal conforme o padrão da disciplina</p>
+      <div class="slide-body">
+        <div class="col-left">
+          <ul class="slide-list">
+            <li><strong>Convenção de tabelas:</strong> tabelas de referência com prefixo <code>ref_</code> e tabelas de dados com <code>tab_</code>.</li>
+            <li><strong>Chaves primárias:</strong> geradas por identidade (<code>GENERATED ALWAYS AS IDENTITY</code>).</li>
+            <li><strong>Relação N:M resolvida:</strong> tabela associativa <code>tab_entidade_uniprot</code> para ligar subunidades proteicas aos códigos UniProt.</li>
+            <li><strong>Carga automatizada:</strong> script <code>04_banco_sql.R</code> com a função <code>trocar_id()</code> para foreign keys.</li>
+          </ul>
+        </div>
+        <div class="col-right" style="background: #0f172a; padding: 1rem; border-radius: 8px; font-family: monospace; font-size: 0.8rem; color: #cbd5e1; align-items: flex-start;">
+          <div style="color: #60a5fa; font-weight: bold; margin-bottom: 0.4rem;">ref_revista (1)</div>
+          <div>  └── tab_artigo (N)</div>
+          <div>        └── tab_mencao (N)</div>
+          <div style="color: #f59e0b; font-weight: bold; margin: 0.4rem 0;">tab_estrutura (1)</div>
+          <div>  └── tab_entidade (N)</div>
+          <div>        └── tab_entidade_uniprot (N)</div>
+          <div style="color: #34d399; font-weight: bold; margin-top: 0.4rem;">ref_uniprot (1)</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Slide 7 -->
+    <section class="slide" data-slide="7">
+      <div class="slide-badge">Resultados: Origem</div>
+      <h2 class="slide-title">Depósito inédito versus reaproveitamento</h2>
+      <p class="slide-subtitle">Comparação dos DOIs confirma a separação entre geradores e usuários de dados</p>
+      <div class="slide-body">
+        <div class="col-left">
+          <ul class="slide-list">
+            <li><strong>IUCrJ:</strong> 34,1% das estruturas citadas foram depositadas pelos autores do próprio manuscrito (30 novas estruturas).</li>
+            <li><strong>PLoS Comput Biol:</strong> <strong>0,0%</strong> de novas estruturas depositadas: 100% dos códigos indicam reuso de dados prévios.</li>
+            <li><strong>Significância estatística:</strong> Teste exato de Fisher com <em>p</em> = 2,43 × 10⁻⁵.</li>
+          </ul>
+        </div>
+        <div class="col-right">
+          <img src="../figuras/fig1_origem_estruturas.png" alt="Figura 1: Origem das estruturas">
+        </div>
+      </div>
+    </section>
+
+    <!-- Slide 8 -->
+    <section class="slide" data-slide="8">
+      <div class="slide-badge">Resultados: Idade</div>
+      <h2 class="slide-title">Idade das estruturas citadas</h2>
+      <p class="slide-subtitle">A literatura computacional recorre a alvos históricos para testes de calibração</p>
+      <div class="slide-body">
+        <div class="col-left">
+          <ul class="slide-list">
+            <li><strong>Mediana temporal da citação:</strong>
+              <br>• <strong>IUCrJ:</strong> 4,4 anos (forte concentração após 2020)
+              <br>• <strong>PLoS Comput Biol:</strong> <strong>12,6 anos</strong> (com registros de 1986)
+            </li>
+            <li><strong>Significância:</strong> Teste de Wilcoxon <em>W</em> = 503, <em>p</em> = 2,61 × 10⁻⁸.</li>
+            <li><strong>Contexto bioinformático:</strong> modelos de docking e dinâmica exigem benchmarks clássicos com cinética e mutagênese consolidadas.</li>
+          </ul>
+        </div>
+        <div class="col-right">
+          <img src="../figuras/fig2_distribuicao_idade.png" alt="Figura 2: Distribuição de idade das estruturas">
+        </div>
+      </div>
+    </section>
+
+    <!-- Slide 9 -->
+    <section class="slide" data-slide="9">
+      <div class="slide-badge">Resultados: Métodos</div>
+      <h2 class="slide-title">Métodos biofísicos e resolução atômica</h2>
+      <p class="slide-subtitle">Resolução cristalográfica e proporção de Criomicroscopia Eletrônica</p>
+      <div class="slide-body">
+        <div class="col-left">
+          <ul class="slide-list">
+            <li><strong>Resolução de raios X na IUCrJ:</strong> mediana de <strong>1,70 Å</strong> contra 2,21 Å na PLoS (Wilcoxon <em>p</em> = 0,0025), refletindo linhas síncrotron modernas.</li>
+            <li><strong>Proporção de Crio-ME na IUCrJ:</strong> representa <strong>34,9%</strong> das estruturas analisadas, com resolução mediana de 2,89 Å.</li>
+            <li><strong>Preferência computacional:</strong> apenas 18,2% de Crio-ME; simulações clássicas continuam priorizando malhas rígidas de raios X.</li>
+          </ul>
+        </div>
+        <div class="col-right">
+          <img src="../figuras/fig3_resolucao_metodos.png" alt="Figura 3: Resolução estrutural">
+        </div>
+      </div>
+    </section>
+
+    <!-- Slide 10 -->
+    <section class="slide" data-slide="10">
+      <div class="slide-badge">Resultados: Alvos</div>
+      <h2 class="slide-title">Proteínas mais citadas (UniProt)</h2>
+      <p class="slide-subtitle">Resistência antimicrobiana e alvos terapêuticos presentes na literatura em 2026</p>
+      <div class="slide-body">
+        <div class="col-left">
+          <ul class="slide-list">
+            <li><strong>Beta-lactamase CTX-M-15 (<code>G3G192</code>):</strong> alvo mais citado, com <strong>11 estruturas</strong> em 2 manuscritos (resistência bacteriana).</li>
+            <li><strong>Integrina alfa-M / CD11b (<code>P11215</code>):</strong> adesão celular e inflamação crônica.</li>
+            <li><strong>Spike do SARS-CoV-2 (<code>P0DTC2</code>):</strong> 7 estruturas de Crio-ME avaliando mudanças conformacionais do trímero.</li>
+            <li><strong>L-asparaginase 2 (<code>P00805</code>):</strong> enzima terapêutica em leucemia linfoide com 10 estruturas.</li>
+          </ul>
+        </div>
+        <div class="col-right">
+          <img src="../figuras/fig4_top_uniprot_proteinas.png" alt="Figura 4: Proteínas citadas">
+        </div>
+      </div>
+    </section>
+
+    <!-- Slide 11 -->
+    <section class="slide" data-slide="11">
+      <div class="slide-badge">Resultados: Densidade</div>
+      <h2 class="slide-title">Volume de citações por artigo individual</h2>
+      <p class="slide-subtitle">Artigos computacionais pontuais versus séries cristalográficas extensas</p>
+      <div class="slide-body">
+        <div class="col-left">
+          <ul class="slide-list">
+            <li><strong>PLoS Comput Biol:</strong> artigos pontuais citando entre 3 e 5 estruturas específicas como modelos de partida.</li>
+            <li><strong>IUCrJ:</strong> manuscritos densos citando frequentemente mais de 20 códigos PDB em uma única publicação.</li>
+            <li><strong>Causas:</strong> triagens cristalográficas com múltiplos fragmentos e artigos de revisão sobre maquinarias macromoleculares.</li>
+          </ul>
+        </div>
+        <div class="col-right">
+          <img src="../figuras/fig5_mencoes_por_artigo.png" alt="Figura 5: Volume de menções">
+        </div>
+      </div>
+    </section>
+
+    <!-- Slide 12 -->
+    <section class="slide" data-slide="12">
+      <div class="slide-badge">Conclusões</div>
+      <h2 class="slide-title">Conclusões do projeto</h2>
+      <p class="slide-subtitle">Integração entre engenharia de dados e análise bibliométrica</p>
+      <div class="slide-body">
+        <div class="col-left">
+          <ul class="slide-list">
+            <li><strong>Engenharia de dados:</strong> pipeline automatizado e reprodutível conectando APIs, AWS S3, mineração de PDFs e PostgreSQL normalizado (3FN).</li>
+            <li><strong>Resultado científico:</strong> evidência quantitativa da especialização: a literatura experimental expande o acervo com dados recentes; a literatura computacional reutiliza referências consolidadas (mediana de 12,6 anos).</li>
+            <li><strong>Reprodutibilidade:</strong> código e tabelas documentados no GitHub.</li>
+          </ul>
+          <div class="stat-pill" style="margin-top: 1rem;">github.com/paivacaetano126/TrabalhoPDB</div>
+        </div>
+        <div class="col-right" style="flex-direction: column; text-align: center; gap: 1rem;">
+          <div style="font-size: 1.8rem; font-weight: bold; color: var(--primary);">Obrigado</div>
+          <p style="font-size: 0.95rem; color: #475569;">
+            Agradecemos ao <strong>Prof. Dr. Thomas Vilches</strong> pela condução da disciplina FCM 2026.<br><br>
+            Estamos à disposição para dúvidas.
+          </p>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <aside class="notes-panel" id="notes-panel">
+    <div class="notes-header">
+      <span>Roteiro do apresentador</span>
+      <span style="font-size: 0.75rem; color: #94a3b8;">Tecla N para fechar</span>
+    </div>
+    <div class="notes-content" id="notes-content"></div>
+  </aside>
+
+  <footer class="deck-footer">
+    <button class="btn" id="btn-prev">◀ Anterior (←)</button>
+    <div class="progress-bar-container">
+      <div class="progress-bar" id="progress-bar"></div>
+    </div>
+    <span class="slide-counter" id="slide-counter">Slide 1 de 12</span>
+    <button class="btn btn-primary" id="btn-next">Próximo (→) ▶</button>
+  </footer>
+
+  <script>
+    const speakerNotes = {
+      1: "Bom dia a todos, bom dia professor Thomas. Meu nome é José Victor e vou apresentar o trabalho desenvolvido junto com o Ricardo Caetano e o Pedro Yashima. Nosso projeto investiga o caminho que vai do artigo científico até o banco de dados relacional, mapeando quais estruturas do Protein Data Bank estão sendo de fato citadas na literatura recente de 2026. A ideia foi verificar se periódicos experimentais e computacionais lidam com essas coordenadas da mesma forma ou se desempenham papéis diferentes no ecossistema da biologia estrutural.",
+      2: "Para situar o problema: o PDB tem mais de 220 mil entradas. Mas a base de dados isolada funciona como um arquivo histórico cumulativo. Ela mostra o que foi depositado ao longo de cinquenta anos, sem dizer o que a comunidade está usando hoje. Muitas estruturas foram depositadas uma única vez e não voltaram a ser citadas. Outras viraram referências obrigatórias para simulações e testes de ancoramento molecular. A forma mais direta de medir esse uso real é analisar os artigos científicos publicados recentemente.",
+      3: "Para testar essa hipótese, selecionamos duas revistas complementares: a IUCrJ, voltada à cristalografia e biofísica experimental, e a PLoS Computational Biology, focada em bioinformática e modelagem. Selecionamos os 10 artigos mais recentes de 2026 de cada uma que continham pelo menos 3 códigos PDB no texto, totalizando 20 manuscritos para análise.",
+      4: "O pipeline foi totalmente construído em R de forma modular. O primeiro script busca as publicações na API da Europe PMC; o segundo baixa os PDFs diretamente do bucket aberto da AWS; o terceiro extrai os códigos PDB do texto; o quarto coleta os metadados no portal do RCSB; o quinto estrutura e carrega os dados no PostgreSQL; e o sexto gera os gráficos e as análises estatísticas. Cada etapa roda de forma independente.",
+      5: "Durante a implementação, lidamos com algumas questões técnicas importantes. Como o portal do PMC barra downloads em lote, buscamos os arquivos pelo bucket aberto na AWS. Além disso, um código PDB tem apenas quatro caracteres alfanuméricos. Uma regex simples captura anos e modelos de equipamentos, como a bomba LC-20AD citada na metodologia. Nós resolvemos isso exigindo ao menos uma letra nas três posições finais e checando a presença de termos como 'PDB' e 'entry' na vizinhança do texto. No scraping, mantivemos pausas de dois segundos entre requisições para respeitar o servidor do RCSB.",
+      6: "Na parte de banco de dados, o Pedro estruturou o modelo na Terceira Forma Normal, seguindo o padrão das aulas com prefixos ref_ e tab_. Um ponto relevante foi o relacionamento entre cadeias proteicas e identificadores UniProt: certas estruturas contêm múltiplos domínios ou são construções quiméricas, enquanto anticorpos muitas vezes não possuem registro no UniProt. A tabela associativa tab_entidade_uniprot garantiu que esses casos fossem representados sem perda de integridade.",
+      7: "Passando aos resultados, a primeira figura mostra a comparação entre estruturas depositadas pelo próprio artigo e estruturas reutilizadas da literatura, verificada pelo cruzamento dos DOIs. Na IUCrJ, 34,1% das estruturas citadas eram novos depósitos descritos naquele manuscrito. Na PLoS Computational Biology, essa taxa foi zero: todas as estruturas identificadas eram dados prévios reutilizados. O teste de Fisher confirmou a diferença com p-valor de 2,4 vezes 10 a menos 5, comprovando a atuação da revista computacional como usuária secundária dessas coordenadas.",
+      8: "O segundo dado diz respeito à idade dessas estruturas no momento da citação. Calculamos o intervalo entre a data de depósito no PDB e a publicação em 2026. A mediana na IUCrJ foi de 4,4 anos, enquanto na PLoS Computational Biology foi de 12,6 anos, chegando a estruturas depositadas em 1986. Isso acontece porque a bioinformática necessita de alvos consolidados e historicamente validados por dados experimentais de afinidade e cinética para calibrar seus algoritmos de simulação e docking.",
+      9: "Ao analisar os métodos biofísicos, vimos que as estruturas cristalográficas por raios X citadas na IUCrJ têm resolução significativamente melhor, com mediana de 1,70 Å contra 2,21 Å na PLoS. Além disso, a Criomicroscopia Eletrônica já responde por mais de um terço das estruturas na revista experimental, com resolução mediana de 2,89 Å. Na computação, a presença de Crio-ME ainda é menor, refletindo a preferência de algoritmos clássicos por coordenadas rígidas de difração de alta resolução.",
+      10: "No nível molecular, mapeado pelo UniProt, a proteína mais recorrente foi a Beta-lactamase CTX-M-15, com 11 estruturas diferentes citadas em dois artigos. Esse resultado reflete o esforço de pesquisa em torno da resistência bacteriana a antibióticos. Também encontramos alvos terapêuticos relevantes, como a integrina CD11b, a L-asparaginase e estruturas da proteína Spike do SARS-CoV-2.",
+      11: "A distribuição de citações por artigo individual mostra comportamentos bem distintos. Enquanto a PLoS Computational Biology costuma citar entre 3 e 5 estruturas específicas usadas como ponto de partida da modelagem, publicações da IUCrJ chegam a citar mais de 20 códigos PDB. Isso ocorre quando os autores publicam triagens de fragmentos químicos ou revisões técnicas detalhando grandes complexos biológicos.",
+      12: "Para concluir: cumprimos os objetivos da disciplina, construindo um pipeline que automatiza a coleta, a extração, a raspagem e a persistência em banco relacional. Os dados mostram a complementaridade entre as duas áreas: a pesquisa experimental assume a elucidação de novas coordenadas de alta precisão, enquanto a bioinformática transforma estruturas consolidadas em plataformas duradouras para testes e simulações. Agradeço a atenção de todos e estamos à disposição para dúvidas."
+    };
+
+    let currentSlide = 1;
+    const totalSlides = 12;
+
+    const slides = document.querySelectorAll('.slide');
+    const slideCounter = document.getElementById('slide-counter');
+    const progressBar = document.getElementById('progress-bar');
+    const notesPanel = document.getElementById('notes-panel');
+    const notesContent = document.getElementById('notes-content');
+
+    function updateSlide(newIndex) {
+      if (newIndex < 1 || newIndex > totalSlides) return;
+      currentSlide = newIndex;
+
+      slides.forEach(slide => {
+        slide.classList.remove('active');
+        if (parseInt(slide.getAttribute('data-slide')) === currentSlide) {
+          slide.classList.add('active');
+        }
+      });
+
+      slideCounter.textContent = `Slide ${currentSlide} de ${totalSlides}`;
+      progressBar.style.width = `${(currentSlide / totalSlides) * 100}%`;
+      notesContent.textContent = speakerNotes[currentSlide] || "Sem notas para este slide.";
+    }
+
+    document.getElementById('btn-prev').addEventListener('click', () => updateSlide(currentSlide - 1));
+    document.getElementById('btn-next').addEventListener('click', () => updateSlide(currentSlide + 1));
+
+    const btnNotes = document.getElementById('btn-notes');
+    btnNotes.addEventListener('click', () => {
+      notesPanel.classList.toggle('visible');
+    });
+
+    const btnFullscreen = document.getElementById('btn-fullscreen');
+    btnFullscreen.addEventListener('click', () => {
+      if (!document.fullscreenElement) {
+        document.documentElement.requestFullscreen().catch(() => {});
+      } else {
+        document.exitFullscreen().catch(() => {});
+      }
+    });
+
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'ArrowRight' || e.key === ' ' || e.key === 'PageDown') {
+        e.preventDefault();
+        updateSlide(currentSlide + 1);
+      } else if (e.key === 'ArrowLeft' || e.key === 'PageUp') {
+        e.preventDefault();
+        updateSlide(currentSlide - 1);
+      } else if (e.key === 'n' || e.key === 'N') {
+        notesPanel.classList.toggle('visible');
+      } else if (e.key === 'f' || e.key === 'F') {
+        if (!document.fullscreenElement) {
+          document.documentElement.requestFullscreen().catch(() => {});
+        } else {
+          document.exitFullscreen().catch(() => {});
+        }
+      }
+    });
+
+    updateSlide(1);
+  </script>
+</body>
+</html>
