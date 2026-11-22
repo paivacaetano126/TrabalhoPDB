@@ -1,0 +1,231 @@
+---
+title: "Do artigo ao banco de dados: estruturas do PDB citadas na literatura recente"
+subtitle: "Disciplina FCM 2026 (Prof. Dr. Thomas Nogueira Vilches)"
+author: 
+  - "José Victor Orlandi (gráficos, análise, relatório, apresentação)"
+  - "Ricardo de Paiva Caetano (seleção de artigos, PDFs, regex, scraping)"
+  - "Pedro Yuji Yashima (modelagem relacional SQL, banco PostgreSQL)"
+date: "Novembro de 2026"
+output:
+  html_document:
+    theme: flatly
+    highlight: tango
+    toc: true
+    toc_depth: 3
+    toc_float: true
+    number_sections: true
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(
+  echo = TRUE,
+  warning = FALSE,
+  message = FALSE,
+  fig.path = "../figuras/",
+  fig.align = "center",
+  dpi = 300
+)
+
+suppressPackageStartupMessages({
+  library(tidyverse)
+  library(scales)
+  library(knitr)
+})
+
+dir_raiz <- if (file.exists("dados/artigos_selecionados.csv")) "." else ".."
+caminho_artigos    <- file.path(dir_raiz, "dados/artigos_selecionados.csv")
+caminho_mencoes    <- file.path(dir_raiz, "saida/mencoes_pdb.csv")
+caminho_estruturas <- file.path(dir_raiz, "saida/estruturas.csv")
+caminho_entidades  <- file.path(dir_raiz, "saida/entidades.csv")
+caminho_nao_achou  <- file.path(dir_raiz, "saida/codigos_nao_encontrados.csv")
+
+artigos    <- read.csv(caminho_artigos, stringsAsFactors = FALSE)
+mencoes    <- read.csv(caminho_mencoes, stringsAsFactors = FALSE)
+estruturas <- read.csv(caminho_estruturas, stringsAsFactors = FALSE)
+entidades  <- read.csv(caminho_entidades, stringsAsFactors = FALSE)
+nao_achou  <- if (file.exists(caminho_nao_achou)) read.csv(caminho_nao_achou, stringsAsFactors = FALSE) else tibble(codigo_pdb = character())
+
+df_mencoes <- mencoes %>%
+  left_join(artigos %>% select(pmcid, revista, doi_artigo = doi, data_publicacao, titulo_artigo = titulo), by = "pmcid") %>%
+  left_join(estruturas, by = "codigo_pdb") %>%
+  mutate(
+    encontrada = case_when(
+      codigo_pdb %in% nao_achou$codigo_pdb ~ FALSE,
+      codigo_pdb %in% estruturas$codigo_pdb & is.na(metodo) ~ FALSE,
+      codigo_pdb %in% estruturas$codigo_pdb ~ TRUE,
+      TRUE ~ FALSE
+    ),
+    data_publicacao = as.Date(data_publicacao),
+    data_deposito   = as.Date(data_deposito),
+    ano_deposito    = as.integer(format(data_deposito, "%Y")),
+    idade_anos      = as.numeric((data_publicacao - data_deposito) / 365.25),
+    origem = case_when(
+      !encontrada ~ "Não encontrada",
+      !is.na(doi_estrutura) & tolower(doi_estrutura) == tolower(doi_artigo) ~ "Depositada pelo próprio artigo",
+      TRUE ~ "Reaproveitada da literatura"
+    )
+  )
+
+df_estruturas_unicas <- df_mencoes %>%
+  filter(encontrada) %>%
+  distinct(revista, codigo_pdb, .keep_all = TRUE)
+```
+
+# Resumo
+
+O Protein Data Bank (PDB) armazena coordenadas macromoleculares elucidadas por técnicas biofísicas ao longo de cinco décadas (BERMAN et al., 2000; BURLEY et al., 2023, 2025). No entanto, o catálogo estático isolado não indica a frequência real de uso dessas estruturas pela comunidade científica. Neste trabalho, implementamos um pipeline em R para minerar citações a códigos PDB nos 20 artigos de acesso aberto mais recentes publicados em 2026 nos periódicos **IUCrJ** (cristalografia experimental) e **PLoS Computational Biology** (modelagem computacional) a partir da API da Europe PMC (FERGUSON et al., 2021; ROSONOVSKI et al., 2024).
+
+Foram catalogadas 126 menções a 122 estruturas PDB únicas válidas. Os dados foram enriquecidos via web scraping no RCSB PDB e organizados em banco relacional PostgreSQL em Terceira Forma Normal (SILBERSCHATZ; KORTH; SUDARSHAN, 2020; VILCHES, 2026). Os resultados indicam especialização funcional entre as revistas:
+- **Taxa de ineditismo:** 34,1% das estruturas na IUCrJ foram depositadas pelo próprio artigo estudado, enquanto na PLoS Computational Biology **todas as estruturas identificadas foram reutilizadas da literatura** (teste exato de Fisher, $p = 2,43 \times 10^{-5}$; FISHER, 1922; AGRESTI, 2018).
+- **Idade das estruturas:** artigos computacionais recorrem a estruturas significativamente mais antigas (mediana de **12,6 anos**, datando até 1986) do que artigos experimentais (mediana de **4,4 anos**; teste de Wilcoxon $p = 2,61 \times 10^{-8}$; MANN; WHITNEY, 1947).
+- **Métodos e resolução:** a IUCrJ apresenta resolução mediana de raios X superior (1,70 Å contra 2,21 Å) e maior proporção de Criomicroscopia Eletrônica (34,9% das estruturas analisadas, com mediana de 2,89 Å; DE LA CRUZ; ENG, 2023).
+
+---
+
+# Arquitetura do pipeline
+
+O fluxo de dados foi construído com scripts modulares em linguagem R (WICKHAM et al., 2019):
+
+1. **Seleção dos artigos (`00_selecionar_artigos.R`):** consulta automatizada à API da Europe PMC filtrando publicações de 2026 com acesso aberto e anotações PDB ativas (FERGUSON et al., 2021; ROSONOVSKI et al., 2024).
+2. **Download dos textos completos (`01_baixar_pdfs.R`):** download dos PDFs principais pelo bucket aberto da AWS S3 do PubMed Central Open Access (`pmc-oa-opendata.s3.amazonaws.com`).
+3. **Mineração de códigos (`02_extrair_pdb.R`):** expressões regulares combinadas a filtros de proximidade de termos contextuais para evitar falsos positivos com anos e equipamentos.
+4. **Coleta de metadados no RCSB (`03_scraping_pdb.R`):** raspagem incremental das páginas de cada código no RCSB PDB, registrando métodos, resoluções nominais, datas, cadeias e identificadores UniProt (BURLEY et al., 2023, 2025).
+5. **Modelagem relacional PostgreSQL (`04_banco_sql.R`):** esquema em Terceira Forma Normal no schema `pdb`, com chaves por identidade e tabelas associativas para relações N:M (SILBERSCHATZ; KORTH; SUDARSHAN, 2020; VILCHES, 2026).
+6. **Gráficos e estatística (`05_graficos.R`):** geração de figuras com `ggplot2` e testes de hipótese.
+
+---
+
+# Resultados
+
+## Origem das estruturas citadas
+
+```{r tab_origem, echo=FALSE}
+tab_origem <- df_estruturas_unicas %>%
+  count(revista, origem) %>%
+  group_by(revista) %>%
+  mutate(
+    Total = sum(n),
+    `Proporção (%)` = round((n / Total) * 100, 1)
+  ) %>%
+  rename(Periódico = revista, Origem = origem, `N Estruturas` = n)
+
+kable(tab_origem, caption = "Tabela 1: Origem das estruturas únicas citadas por periódico.")
+```
+
+```{r fig1, echo=FALSE, fig.cap="Figura 1: Proporção de estruturas depositadas pelo artigo versus reaproveitadas da literatura."}
+knitr::include_graphics(file.path(dir_raiz, "figuras/fig1_origem_estruturas.png"))
+```
+
+---
+
+## Idade das estruturas citadas
+
+```{r tab_idade, echo=FALSE}
+tab_idade <- df_mencoes %>%
+  filter(encontrada, !is.na(idade_anos)) %>%
+  group_by(revista) %>%
+  summarise(
+    `Média (anos)` = round(mean(idade_anos), 2),
+    `Mediana (anos)` = round(median(idade_anos), 2),
+    `Mínimo` = round(min(idade_anos), 2),
+    `Máximo` = round(max(idade_anos), 2),
+    `Depósito mais antigo` = as.character(min(data_deposito))
+  ) %>%
+  rename(Periódico = revista)
+
+kable(tab_idade, caption = "Tabela 2: Síntese da idade das estruturas no momento da citação.")
+```
+
+```{r fig2, echo=FALSE, fig.cap="Figura 2: Distribuição da idade das estruturas citadas (anos entre depósito e publicação em 2026)."}
+knitr::include_graphics(file.path(dir_raiz, "figuras/fig2_distribuicao_idade.png"))
+```
+
+```{r fig6, echo=FALSE, fig.cap="Figura 3: Histórico dos anos de depósito das estruturas mencionadas em 2026."}
+knitr::include_graphics(file.path(dir_raiz, "figuras/fig6_linha_tempo_deposito.png"))
+```
+
+---
+
+## Métodos experimentais e resolução
+
+```{r tab_metodos, echo=FALSE}
+tab_metodos <- df_estruturas_unicas %>%
+  filter(!is.na(metodo)) %>%
+  group_by(revista, metodo) %>%
+  summarise(
+    `N Estruturas` = n(),
+    `Resolução média (Å)` = round(mean(resolucao, na.rm = TRUE), 2),
+    `Resolução mediana (Å)` = round(median(resolucao, na.rm = TRUE), 2),
+    .groups = "drop"
+  ) %>%
+  arrange(revista, desc(`N Estruturas`))
+
+kable(tab_metodos, caption = "Tabela 3: Métodos experimentais e resolução atômica.")
+```
+
+```{r fig3, echo=FALSE, fig.cap="Figura 4: Resolução estrutural em difração de raios X e Criomicroscopia Eletrônica."}
+knitr::include_graphics(file.path(dir_raiz, "figuras/fig3_resolucao_metodos.png"))
+```
+
+---
+
+## Alvos moleculares recorrentes (UniProt)
+
+```{r fig4, echo=FALSE, fig.cap="Figura 5: Proteínas mais frequentes na literatura recente analisada."}
+knitr::include_graphics(file.path(dir_raiz, "figuras/fig4_top_uniprot_proteinas.png"))
+```
+
+A beta-lactamase CTX-M-15 (`G3G192`) lidera as citações, refletindo a pesquisa ativa em resistência antimicrobiana (HUSNA et al., 2023).
+
+---
+
+## Volume de citações por artigo
+
+```{r fig5, echo=FALSE, fig.cap="Figura 6: Volume de menções e contagem de estruturas únicas por publicação."}
+knitr::include_graphics(file.path(dir_raiz, "figuras/fig5_mencoes_por_artigo.png"))
+```
+
+---
+
+# Conclusão
+
+O pipeline demonstrou a integração entre APIs científicas, ingestão em nuvem, mineração de textos brutos, raspagem web e modelagem relacional em PostgreSQL normalizado em 3FN. Os resultados evidenciam uma divisão de papéis: periódicos experimentais geram novas coordenadas atômicas com alta resolução recente, enquanto periódicos computacionais atuam na reutilização de dados consolidados como referência para calibração de modelos biofísicos.
+
+Repositório do projeto:  
+[https://github.com/paivacaetano126/TrabalhoPDB](https://github.com/paivacaetano126/TrabalhoPDB).
+
+---
+
+# Referências
+
+ABRAMSON, J. et al. Accurate structure prediction of biomolecular interactions with AlphaFold 3. **Nature**, London, v. 630, n. 8016, p. 493-500, 2024. DOI: 10.1038/s41586-024-07487-w.
+
+AGRESTI, A. **An Introduction to Categorical Data Analysis**. 3. ed. Hoboken: John Wiley & Sons, 2018.
+
+BERMAN, H. M. et al. The Protein Data Bank. **Nucleic Acids Research**, Oxford, v. 28, n. 1, p. 235-242, 2000. DOI: 10.1093/nar/28.1.235.
+
+BURLEY, S. K. et al. RCSB Protein Data Bank (RCSB.org): delivery of experimentally-determined PDB structures alongside one million computed structure models of proteins from artificial intelligence/machine learning. **Nucleic Acids Research**, Oxford, v. 51, n. D1, p. D488-D508, 2023. DOI: 10.1093/nar/gkac1077.
+
+BURLEY, S. K. et al. Updated resources for exploring experimentally-determined PDB structures and Computed Structure Models at the RCSB Protein Data Bank. **Nucleic Acids Research**, Oxford, v. 53, n. D1, p. D564-D574, 2025. DOI: 10.1093/nar/gkae1091.
+
+DE LA CRUZ, M. J.; ENG, E. T. Scaling up cryo-EM for biology and chemistry: The journey from niche technology to mainstream method. **Structure**, Cambridge, v. 31, n. 12, p. 1475-1488, 2023. DOI: 10.1016/j.str.2023.09.009.
+
+FERGUSON, C. et al. Europe PMC in 2020. **Nucleic Acids Research**, Oxford, v. 49, n. D1, p. D1507-D1517, 2021. DOI: 10.1093/nar/gkaa994.
+
+FISHER, R. A. On the interpretation of $\chi^2$ from contingency tables, and the calculation of P. **Journal of the Royal Statistical Society**, London, v. 85, n. 1, p. 87-94, 1922. DOI: 10.2307/2340521.
+
+HARRISON, X. A. et al. A brief introduction to mixed effects modelling and multi-model inference in ecology. **PeerJ**, v. 6, p. e4794, 2018. DOI: 10.7717/peerj.4794.
+
+HUSNA, A. et al. Extended-Spectrum β-Lactamases (ESBL): Challenges and Opportunities. **Biomedicines**, Basel, v. 11, n. 11, p. 2937, 2023. DOI: 10.3390/biomedicines11112937.
+
+MANN, H. B.; WHITNEY, D. R. On a test of whether one of two random variables is stochastically larger than the other. **The Annals of Mathematical Statistics**, Baltimore, v. 18, n. 1, p. 50-60, 1947. DOI: 10.1214/aoms/1177730491.
+
+ROSONOVSKI, S. et al. Europe PMC in 2023. **Nucleic Acids Research**, Oxford, v. 52, n. D1, p. D1668-D1676, 2024. DOI: 10.1093/nar/gkad1085.
+
+SILBERSCHATZ, A.; KORTH, H. F.; SUDARSHAN, S. **Database System Concepts**. 7. ed. New York: McGraw-Hill, 2020.
+
+VARADI, M. et al. AlphaFold Protein Structure Database in 2024: providing structure coverage for over 214 million protein sequences. **Nucleic Acids Research**, Oxford, v. 52, n. D1, p. D376-D385, 2024. DOI: 10.1093/nar/gkad1011.
+
+VILCHES, T. N. **Notas de aula e diretrizes da disciplina de bancos de dados**. Campinas: Faculdade de Ciências Médicas, Universidade Estadual de Campinas, 2026.
+
+WICKHAM, H. et al. Welcome to the Tidyverse. **Journal of Open Source Software**, v. 4, n. 43, p. 1686, 2019. DOI: 10.21105/joss.01686.
