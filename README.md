@@ -89,6 +89,7 @@ O site do PMC barra download automático, então os PDFs vêm do bucket aberto d
 - só conta se tiver "PDB", "entry", "accession" etc. na mesma linha ou até 6 linhas acima
 - na IUCrJ o bloco "PDB references: ... Supporting information" do resumo conta inteiro
 - tira ordinal (2nd, 3rd) e unidade (10mJ, 100ms)
+- tira mapa de densidade (2mFo-DFc), que virava o codigo 2MFO
 
 Sobra algum lixo (tipo `20AD`, do equipamento "LC-20AD"), que cai no scraping quando o RCSB não acha o código.
 
