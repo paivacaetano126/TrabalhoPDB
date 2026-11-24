@@ -89,6 +89,7 @@ O site do PMC barra download automático, então os PDFs vêm do bucket aberto d
 - só conta se tiver "PDB", "entry", "accession" etc. na mesma linha ou até 6 linhas acima
 - na IUCrJ o bloco "PDB references: ... Supporting information" do resumo conta inteiro
 - tira ordinal (2nd, 3rd) e unidade (10mJ, 100ms)
+- tira mapa de densidade (2mFo-DFc), que virava o codigo 2MFO
 
 Sobra algum lixo (tipo `20AD`, do equipamento "LC-20AD"), que cai no scraping quando o RCSB não acha o código.
 
@@ -165,7 +166,7 @@ O script `R/05_graficos.R` consome os dados consolidados e gera as visualizaçõ
 
 ## Cuidados e limitações
 
-- **A seleção muda a cada rodada.** `artigos_selecionados.csv` e `mencoes_pdb.csv` são refeitos toda vez, mas `estruturas.csv`, `entidades.csv` e `codigos_nao_encontrados.csv` acumulam as seleções antigas (pra não buscar de novo). Pra analisar só a seleção atual, partir de `mencoes_pdb.csv` (no banco, de `tab_mencao`).
+- **A seleção muda a cada rodada.** `artigos_selecionados.csv` e `mencoes_pdb.csv` são refeitos toda vez. O `03` reaproveita o que já buscou em `estruturas.csv`, `entidades.csv` e `codigos_nao_encontrados.csv`, mas antes tira desses arquivos os códigos que não são mais citados.
 - **DOI em caixa diferente.** O DOI do artigo vem em minúsculo e o do PDB em maiúsculo; pra comparar, usar `tolower()` no R ou `LOWER()` no SQL.
 - **`n_cadeias` conta só as cadeias proteicas únicas**, não o total de cadeias.
 - **Estrutura não liberada com título.** O `5WH0` cai em `/structure/unreleased/` mas a página tem título, então passa no scraping sem os outros campos. No banco ele fica com `encontrada = FALSE`.

@@ -12,6 +12,14 @@ arq_estruturas <- "saida/estruturas.csv"
 arq_entidades <- "saida/entidades.csv"
 arq_nao_achou <- "saida/codigos_nao_encontrados.csv"
 
+# tira o que nao e mais citado, senao o codigo velho vai pro banco
+if (file.exists(arq_estruturas)) read.csv(arq_estruturas, colClasses = c(data_deposito = "Date")) %>%
+  filter(codigo_pdb %in% codigos) %>% write.csv(arq_estruturas, row.names = FALSE)
+if (file.exists(arq_entidades)) read.csv(arq_entidades, colClasses = "character") %>%
+  filter(codigo_pdb %in% codigos) %>% write.csv(arq_entidades, row.names = FALSE)
+if (file.exists(arq_nao_achou)) read.csv(arq_nao_achou) %>%
+  filter(codigo_pdb %in% codigos) %>% write.csv(arq_nao_achou, row.names = FALSE)
+
 ja_tem <- c()
 if (file.exists(arq_estruturas)) ja_tem <- c(ja_tem, read.csv(arq_estruturas)$codigo_pdb)
 if (file.exists(arq_nao_achou)) ja_tem <- c(ja_tem, read.csv(arq_nao_achou)$codigo_pdb)

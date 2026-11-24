@@ -28,7 +28,10 @@ run_pdb <- function(x, conteudo) {
     vizinhas <- paste(conteudo[max(1, j - janela):min(length(conteudo), j + 1)], collapse = " ")
     if (!(j %in% bloco) & !str_detect(vizinhas, regex(padrao_contexto, ignore_case = TRUE))) return(NULL)
 
-    codigos <- str_extract_all(conteudo[j], regex(padrao_pdb, ignore_case = TRUE))[[1]]
+    # tira mapa de densidade (2mFo-DFc), senao vira o codigo 2MFO
+    linha <- str_remove_all(conteudo[j], "\\d?m?F[oc]\\W{0,3}\\d?D?F[oc]")
+    codigos <- str_extract_all(linha, regex(padrao_pdb, ignore_case = TRUE))[[1]]
+    if (length(codigos) == 0) return(NULL)
     data.frame(codigo_pdb = codigos,
                contexto = str_squish(conteudo[j]))
   })
